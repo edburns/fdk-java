@@ -37,7 +37,7 @@ a password, that is because it invokes sudo.
 
 ```bash
 $ mkdir hello-java-function && cd hello-java-function
-$ fn init --runtime=java your_dockerhub_account/hello
+$ fn init --runtime=java --name your_dockerhub_account/hello
 Runtime: java
 function boilerplate generated.
 func.yaml created

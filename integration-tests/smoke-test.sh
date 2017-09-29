@@ -16,7 +16,7 @@
 # - the runtime docker image is up-to-date
 
 rm -f success failure Dockerfile
-TESTNAME="$(basename $(pwd))"
+export TESTNAME="$(basename $(pwd))"
 set -ex
 
 if [ -f pre-test.sh ]; then
@@ -47,14 +47,25 @@ else
     fn apps create "$TESTNAME"
 fi
 
-fn routes create --timeout 120 "$TESTNAME" /test
+if [[ -x route-create.sh ]]
+then
+    ./route-create.sh
+else
+    fn routes create --timeout 120 "$TESTNAME" /test
+fi
 
 [[ -n "$POST_CONFIGURE_HOOK" ]] && $POST_CONFIGURE_HOOK
 
 fn apps inspect "$TESTNAME"
-fn routes inspect "$TESTNAME" /test
+[[ -x route-create.sh ]] || fn routes inspect "$TESTNAME" /test
 
-curl -v "$API_URL/r/$TESTNAME/test" -d @input > actual
+if [[ -x run-test.sh ]]
+then
+    ./run-test.sh
+else
+    curl -v "$API_URL/r/$TESTNAME/test" -d @input > actual
+fi
+
 if [[ -x expected.sh ]]
 then
     ./expected.sh && touch success || touch failure
@@ -76,5 +87,11 @@ do
 done
 
 set -x
-fn routes delete "$TESTNAME" /test
+
+if [[ -x route-delete.sh ]]
+then
+    ./route-delete.sh
+else
+    fn routes delete "$TESTNAME" /test
+fi
 fn apps delete "$TESTNAME"
